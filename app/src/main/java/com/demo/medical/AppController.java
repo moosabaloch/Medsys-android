@@ -2,8 +2,9 @@ package com.demo.medical;
 
 import android.app.Application;
 
-import com.demo.medical.util.AppLogs;
 import com.demo.medical.util.Constants;
+
+import java.net.URISyntaxException;
 
 import io.socket.client.IO;
 import io.socket.client.Socket;
@@ -14,22 +15,31 @@ import io.socket.client.Socket;
  */
 
 public class AppController extends Application {
-    private static Socket mSocket;
-    @Override
-    public void onCreate() {
-        super.onCreate();
+    private Socket mSocket;
+
+    {
         try {
             mSocket = IO.socket(Constants.SERVER_URL);
-        } catch (Exception e) {
-            AppLogs.loge("Error Connecting to Server : " + e.getMessage());
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
         }
     }
-    public static Socket getSocket() {
+
+//
+//    @Override
+//    public void onCreate() {
+//        super.onCreate();
+////        try {
+////            AppLogs.logd("Server URL Initialised");
+////            mSocket = IO.socket(Constants.SERVER_URL);
+////        } catch (Exception e) {
+////            AppLogs.loge("Error Connecting to Server : " + e.getMessage());
+////        }
+//    }
+
+
+    public Socket getSocket() {
         return mSocket;
     }
 
-    @Override
-    public void onTerminate() {
-        super.onTerminate();
-    }
 }

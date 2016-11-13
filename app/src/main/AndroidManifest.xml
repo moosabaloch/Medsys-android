@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.demo.medical">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".AppController"
         android:allowBackup="true"
@@ -16,15 +18,14 @@
         <activity
             android:name=".ui.SplashActivity"
             android:theme="@style/AppTheme_No_Action_Bar">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
-
         </activity>
+        <activity android:name=".ui.PatientDetailActivity" />
+        <activity android:name=".ui.SettingActivity"></activity>
     </application>
 
 </manifest>

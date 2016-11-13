@@ -6,6 +6,9 @@ import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 
 import com.demo.medical.R;
+import com.demo.medical.database.AppUserData;
+import com.demo.medical.model.AppUser;
+import com.demo.medical.util.SharedPref;
 
 public class SplashActivity extends AppCompatActivity {
     private Class activity;
@@ -15,7 +18,9 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
         //If Login Main else LoginActivity
-        if (true) {
+        AppUser userData = SharedPref.getAppUser(this);
+
+        if (userData.getUserID() == null) {
             activity = LoginActivity.class;
         } else {
             activity = MainActivity.class;
@@ -35,6 +40,7 @@ public class SplashActivity extends AppCompatActivity {
 
 
     private void proceedToMain() {
+
         startActivity(new Intent(SplashActivity.this, activity));
         SplashActivity.this.finish();
     }

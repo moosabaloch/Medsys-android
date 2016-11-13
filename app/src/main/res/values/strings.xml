@@ -5,4 +5,20 @@
     <string name="password">Password</string>
     <string name="email">Email</string>
     <string name="description"> </string>
+    <string name="home">Home</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="patient_name">Patient Name</string>
+    <string name="status_discharge">Status: Discharge</string>
+    <string name="condition_critical">Condition: Critical</string>
+    <string name="disease_dummy_data">Disease: Dummy Data</string>
+    <string name="admit_date_12_12_12">Admit Date: 12/12/12</string>
+    <string name="name">Name</string>
+    <string name="disease">Disease</string>
+    <string name="condition">Condition</string>
+    <string name="add_patient">Add Patient</string>
+    <string name="create_patient">Create Patient</string>
+    <string name="setting">Setting</string>
+    <string name="logout">Logout</string>
 </resources>

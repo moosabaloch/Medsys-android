@@ -1,6 +1,8 @@
 package com.demo.medical.util;
 
+import android.content.Context;
 import android.text.TextUtils;
+import android.widget.Toast;
 
 /**
  * Created by Moosa moosa.bh@gmail.com on 10/30/2016 30 October.
@@ -8,6 +10,18 @@ import android.text.TextUtils;
  */
 
 public class Util {
+
+    public static String PATIENT_OBJECT = "patient_object";
+
+    public static void toastShort(Context context, String msg) {
+        try {
+            AppLogs.logd("Toast: "+msg);
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            AppLogs.loge("Context Null pointer");
+        }
+    }
 
 
     public static boolean isValidEmail(CharSequence target) {

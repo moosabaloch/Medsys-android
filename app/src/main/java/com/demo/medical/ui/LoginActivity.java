@@ -1,39 +1,55 @@
 package com.demo.medical.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.widget.EditText;
 
 import com.demo.medical.AppController;
 import com.demo.medical.R;
+import com.demo.medical.database.AppUserData;
+import com.demo.medical.model.AppUser;
+import com.demo.medical.util.AppLogs;
 import com.demo.medical.util.Constants;
+import com.demo.medical.util.SharedPref;
 import com.demo.medical.util.Util;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener, Emitter.Listener {
-    private EditText email, pass;
+    private TextInputEditText email, pass;
     private Socket socket;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        socket = AppController.getSocket();
+        AppLogs.logd("Get Socket");
+        AppController app = (AppController) this.getApplication();
+        socket = app.getSocket();
         setContentView(R.layout.activity_login);
         (findViewById(R.id.btn_login)).setOnClickListener(this);
-        email = (EditText) findViewById(R.id.login_input_email);
-        pass = (EditText) findViewById(R.id.login_input_password);
+        email = (TextInputEditText) findViewById(R.id.login_input_email);
+        pass = (TextInputEditText) findViewById(R.id.login_input_password);
 
-        socket.on(Constants.LOGIN_SOCK, this);
+        socket.on(Constants.ACCOUNT_VALIDATED, this);
+        socket.connect();
 
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        socket.off(Constants.LOGIN_SOCK, this);
+        socket.disconnect();
+        socket.off(Constants.ACCOUNT_VALIDATED, this);
+
     }
 
     @Override
@@ -49,9 +65,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
     private void proceedToLogin() {
         if (Util.isValidEmail(email.getText())) {
-            if (Util.isValidPassword(pass.getText(), pass.getText())) {
+            if (!Util.isValidPassword(pass.getText(), pass.getText())) {
 
 
+                HashMap<String, String> map = new HashMap<>();
+                map.put("email", email.getText().toString());
+                map.put("pass", pass.getText().toString());
+                socket.emit(Constants.LOGIN_POST_USER_DATA, new JSONObject(map));
             } else {
                 pass.setError("Invalid Password");
             }
@@ -62,7 +82,53 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
 
     @Override
-    public void call(Object... args) {
+    public void call(final Object... args) {
+        try {
+            JSONObject jsonObject = new JSONObject(args[0].toString());
+            /*
+            {
+                "_id":"5826469fc5e53f3b975e09bd",
+                "uid":"101",
+                "name":"Sushan Kumar",
+                "email":"shahid@gmail.com",
+                "password":"12345",
+                "is_admin":false,
+                "__v":0,
+                "patients":[],
+                "specialization":[]
+            }
+          */
+            AppUser appUser = new AppUser();
+            appUser.setUserName(jsonObject.getString("name"));
+            appUser.setEmail(jsonObject.getString("email"));
+            appUser.setUserID(jsonObject.getString("_id"));
+            JSONArray patients = jsonObject.getJSONArray("patients");
+            ArrayList<String> pIds = new ArrayList<>();
+            for (int i = 0; i < patients.length(); i++) {
+                pIds.add(patients.getString(i));
+            }
+            JSONArray specialization = jsonObject.getJSONArray("patients");
+            ArrayList<String> specs = new ArrayList<>();
+            for (int i = 0; i < specialization.length(); i++) {
+                specs.add(specialization.getString(i));
+            }
+            appUser.setPatientIds(pIds);
+            appUser.setSpecialization(specs);
+            AppUserData data = new AppUserData(this);
+            data.saveUserData(appUser);
+            SharedPref.setAppUser(this, appUser);
+            startActivity(new Intent(this, MainActivity.class));
+
+        } catch (Exception e) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Util.toastShort(LoginActivity.this, " " + args[0].toString());
+                }
+            });
+
+            AppLogs.loge("Error at Json Parsing");
+        }
 
     }
 }
