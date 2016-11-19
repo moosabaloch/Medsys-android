@@ -57,6 +57,8 @@ public class PatientsListingFragment extends Fragment implements Emitter.Listene
         socket.emit(Constants.GET_ALL_PATIENTS, SharedPref.getAppUser(getActivity()).getUserID());
         listView = (ListView) view.findViewById(R.id.patientsListView);
         patientArrayList = new ArrayList<>();
+        Patient patient = new Patient("123123", "1231343", "Haris", "Flu", true, "Normal", System.currentTimeMillis(), 0L);
+        patientArrayList.add(patient);
         adaptor = new PatientsAdaptor(getActivity(), patientArrayList);
         listView.setAdapter(adaptor);
         listView.setOnItemClickListener(this);
