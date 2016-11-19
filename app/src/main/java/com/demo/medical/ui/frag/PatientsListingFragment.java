@@ -1,9 +1,11 @@
 package com.demo.medical.ui.frag;
 
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,10 +17,13 @@ import com.demo.medical.R;
 import com.demo.medical.adaptor.PatientsAdaptor;
 import com.demo.medical.model.Patient;
 import com.demo.medical.ui.PatientDetailActivity;
+import com.demo.medical.util.AppLogs;
 import com.demo.medical.util.Constants;
 import com.demo.medical.util.Parse;
 import com.demo.medical.util.SharedPref;
 import com.demo.medical.util.Util;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 
@@ -28,7 +33,9 @@ import io.socket.emitter.Emitter;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class PatientsListingFragment extends Fragment implements Emitter.Listener, AdapterView.OnItemClickListener {
+public class PatientsListingFragment extends Fragment implements Emitter.Listener,
+        AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
+
     private ListView listView;
     private PatientsAdaptor adaptor;
     private ArrayList<Patient> patientArrayList;
@@ -45,14 +52,15 @@ public class PatientsListingFragment extends Fragment implements Emitter.Listene
         // Inflate the layout for this fragment
         socket = ((AppController) getActivity().getApplication()).getSocket();
         View view = inflater.inflate(R.layout.fragment_patients_listing, container, false);
-        socket.on(Constants.GET_ALL_PATIENTS, this);
         socket.connect();
+        socket.on(Constants.GET_ALL_PATIENTS, this);
         socket.emit(Constants.GET_ALL_PATIENTS, SharedPref.getAppUser(getActivity()).getUserID());
         listView = (ListView) view.findViewById(R.id.patientsListView);
         patientArrayList = new ArrayList<>();
         adaptor = new PatientsAdaptor(getActivity(), patientArrayList);
         listView.setAdapter(adaptor);
         listView.setOnItemClickListener(this);
+        listView.setOnItemLongClickListener(this);
         return view;
     }
 
@@ -60,6 +68,7 @@ public class PatientsListingFragment extends Fragment implements Emitter.Listene
     public void onDestroyView() {
         super.onDestroyView();
         socket.off(Constants.GET_ALL_PATIENTS, this);
+        socket.disconnect();
     }
 
     @Override
@@ -93,5 +102,40 @@ public class PatientsListingFragment extends Fragment implements Emitter.Listene
         Intent intent = new Intent(getActivity(), PatientDetailActivity.class);
         intent.putExtra(Util.PATIENT_OBJECT, patient);
         getActivity().startActivity(intent);
+    }
+
+    @Override
+    public boolean onItemLongClick(AdapterView<?> adapterView, View view, final int index, long l) {
+        final Patient patient = patientArrayList.get(index);
+        AlertDialog.Builder dialog = new AlertDialog.Builder(getActivity());
+        dialog.setTitle("Patient Action");
+        dialog.setMessage("Are you sure you want to discharge '" + patient.getName() + "' ?");
+        dialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                try {
+                    JSONObject object = new JSONObject();
+                    object.put("doc_id", patient.getDoctor_id());
+                    object.put("patient_id", patient.getId());
+                    socket.emit(Constants.DISCHARGE_PATIENT, object);
+                    patientArrayList.remove(index);
+                    adaptor.notifyDataSetChanged();
+
+                } catch (Exception ex) {
+                    AppLogs.loge("" + ex.getMessage());
+                }
+
+
+            }
+        });
+        dialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                AppLogs.loge("Delete Patient Cancel");
+            }
+        });
+        dialog.create().show();
+
+        return true;
     }
 }

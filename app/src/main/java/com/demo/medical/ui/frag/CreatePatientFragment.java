@@ -43,6 +43,7 @@ public class CreatePatientFragment extends Fragment implements Emitter.Listener 
         name = (TextInputEditText) view.findViewById(R.id.patient_name_et);
         desease = (TextInputEditText) view.findViewById(R.id.patient_disease_et);
         condition = (TextInputEditText) view.findViewById(R.id.patient_condition_et);
+        socket.connect();
         socket.on(Constants.CREATE_PATIENT, this);
         (view.findViewById(R.id.add_patient)).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -50,7 +51,6 @@ public class CreatePatientFragment extends Fragment implements Emitter.Listener 
                 proceedToAdd();
             }
         });
-        socket.connect();
         return view;
     }
 
@@ -58,6 +58,7 @@ public class CreatePatientFragment extends Fragment implements Emitter.Listener 
     public void onDestroyView() {
         super.onDestroyView();
         socket.off(Constants.CREATE_PATIENT, this);
+        socket.disconnect();
     }
 
     private void proceedToAdd() {
@@ -82,6 +83,7 @@ public class CreatePatientFragment extends Fragment implements Emitter.Listener 
                         jsonObject.put("condition", patient.getCondition());
                         jsonObject.put("admit_date", patient.getAdmitDate());
                         socket.emit(Constants.CREATE_PATIENT, jsonObject);
+                        AppLogs.logd("Emit Patient Data on (add_new_patient)");
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -102,14 +104,21 @@ public class CreatePatientFragment extends Fragment implements Emitter.Listener 
 
     @Override
     public void call(final Object... args) {
+        AppLogs.loge("Response Invoked for add_new_patient");
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Util.toastShort(getActivity(), args[0].toString() + " ");
-                if (args[0].toString().contains("Added")) {
-                    getActivity().getSupportFragmentManager().popBackStack();
-                } else {
-                    AppLogs.loge("Error User Not Added");
+                try {
+                    Util.toastShort(getActivity(), args[0].toString() + " ");
+                    if (args[0].toString().contains("Added")) {
+                        socket.emit(Constants.GET_ALL_PATIENTS, SharedPref.getAppUser(getActivity()).getUserID());
+                        getActivity().getSupportFragmentManager().popBackStack();
+                        AppLogs.logd("" + args[0].toString());
+                    } else {
+                        AppLogs.loge("Error User Not Added");
+                    }
+                } catch (Exception ex) {
+                    AppLogs.loge("Error call(); -> " + ex.getMessage());
                 }
             }
         });

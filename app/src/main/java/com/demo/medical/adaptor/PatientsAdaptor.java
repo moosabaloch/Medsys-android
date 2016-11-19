@@ -68,7 +68,7 @@ public class PatientsAdaptor extends BaseAdapter {
         viewHolder.disease.setText(disease);
         Calendar c = Calendar.getInstance();
         c.setTimeInMillis(patient.getAdmitDate());
-        viewHolder.admit_date.setText(c.get(Calendar.DATE) + "/" + c.get(Calendar.MONTH) + "/" + c.get(Calendar.YEAR));
+        viewHolder.admit_date.setText(c.get(Calendar.DATE) + "/" + (c.get(Calendar.MONTH)+1) + "/" + c.get(Calendar.YEAR));
 
         return view;
     }

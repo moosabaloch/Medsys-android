@@ -21,4 +21,11 @@
     <string name="create_patient">Create Patient</string>
     <string name="setting">Setting</string>
     <string name="logout">Logout</string>
+    <string name="discharge">Discharge</string>
+    <string name="go_back">Go Back</string>
+    <string name="temp_91f">Temp: 91F</string>
+    <string name="heart_rate_62ppm">Heart Rate: 62ppm</string>
+    <string name="humidity_70">Humidity: 70%</string>
+    <string name="server_url">Server URL</string>
+    <string name="you_must_have_to_restart_your_application_to_propagate_it_according_to_the_new_url">You must have to restart your application to propagate it according to the new URL.</string>
 </resources>

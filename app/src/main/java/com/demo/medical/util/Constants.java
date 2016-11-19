@@ -11,4 +11,5 @@ public class Constants {
     public static String ACCOUNT_VALIDATED = "account_validated";
     public static String CREATE_PATIENT = "add_new_patient";
     public static String GET_ALL_PATIENTS = "get_all_patients";
+    public static String DISCHARGE_PATIENT = "discharge_patient";
 }

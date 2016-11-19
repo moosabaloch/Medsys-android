@@ -15,6 +15,7 @@ public class SharedPref {
     private static String APP_USER_ID = "app_user_id";
     private static String APP_USER_EMAIL = "app_user_email";
     private static String APP_USER_NAME = "app_user_name";
+    private static String APP_URL = "app_url";
 
 
     public static void setAppUser(Context context, AppUser user) {
@@ -43,10 +44,21 @@ public class SharedPref {
         return user;
     }
 
+    public static String getCurrentURL(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(PACKAGE_NAME, Context.MODE_PRIVATE);
+        return prefs.getString(APP_URL, "http://192.168.0.104:3000/");
+    }
+
+    public static void setCurrentURL(Context context, String url) {
+        SharedPreferences prefs = context.getSharedPreferences(PACKAGE_NAME, Context.MODE_PRIVATE);
+        prefs.edit().putString(APP_URL, url).apply();
+    }
+
+
     public static void clearAll(Context context) {
         try {
             AppLogs.logd("Clearing All Shared Preferences");
-            context.getSharedPreferences(PACKAGE_NAME, Context.MODE_PRIVATE).edit().clear().commit();
+            context.getSharedPreferences(PACKAGE_NAME, Context.MODE_PRIVATE).edit().clear().apply();//commit();
             AppLogs.logd("All Shared Preferences cleared");
         } catch (Exception ex) {
             AppLogs.loge("Cannot Clear Shared Prefs:" + ex.getMessage());
