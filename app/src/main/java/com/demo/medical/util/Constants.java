@@ -12,4 +12,9 @@ public class Constants {
     public static String CREATE_PATIENT = "add_new_patient";
     public static String GET_ALL_PATIENTS = "get_all_patients";
     public static String DISCHARGE_PATIENT = "discharge_patient";
+    public static String GET_PATIENT_DATA_BY_ID = "";
+    public static String GET_ALL_DEVICES = "get_devices";
+    public static String SET_PATIENT_DEVICE = "set_patient_device";
+    public static String DEVICE_STATE = "device_state";
+    public static String SENSOR_DATA = "sensor_data";
 }

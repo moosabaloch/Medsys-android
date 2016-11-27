@@ -28,4 +28,7 @@
     <string name="humidity_70">Humidity: 70%</string>
     <string name="server_url">Server URL</string>
     <string name="you_must_have_to_restart_your_application_to_propagate_it_according_to_the_new_url">You must have to restart your application to propagate it according to the new URL.</string>
+    <string name="title_activity_devices_list">DevicesListActivity</string>
+    <string name="patient_devices">Patient Devices</string>
+    <string name="set_device">Set Device</string>
 </resources>

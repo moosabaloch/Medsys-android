@@ -50,7 +50,7 @@ public class PatientsListingFragment extends Fragment implements Emitter.Listene
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        socket = ((AppController) getActivity().getApplication()).getSocket();
+        socket = AppController.getSocket();
         View view = inflater.inflate(R.layout.fragment_patients_listing, container, false);
         socket.connect();
         socket.on(Constants.GET_ALL_PATIENTS, this);

@@ -119,12 +119,12 @@
                     android:theme="@style/ButtonRipple" />
 
                 <android.support.v7.widget.AppCompatButton
-                    android:id="@+id/patient_backButton"
+                    android:id="@+id/patient_set_device_Button"
                     style="@style/Base.Widget.AppCompat.Button"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/go_back"
+                    android:text="@string/set_device"
                     android:theme="@style/ButtonRipple" />
 
             </LinearLayout>

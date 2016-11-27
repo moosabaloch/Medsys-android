@@ -64,6 +64,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.nav_logout:
                 logout();
                 break;
+//            case R.id.nav_devices:
+//                startActivity(new Intent(this,DevicesListActivity.class));
+//                break;
         }
 
 

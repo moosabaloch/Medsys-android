@@ -1,9 +1,13 @@
 package com.demo.medical.ui;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.AppCompatButton;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import com.demo.medical.AppController;
@@ -23,12 +27,15 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.ColorTemplate;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import io.socket.client.Ack;
 import io.socket.client.Socket;
+import io.socket.emitter.Emitter;
 
 public class PatientDetailActivity extends AppCompatActivity implements OnChartValueSelectedListener {
     private Patient patient;
@@ -44,6 +51,33 @@ public class PatientDetailActivity extends AppCompatActivity implements OnChartV
     private Runnable runnable;
     private Runnable runnable2;
     private int pulseIterate = 0;
+    private Emitter.Listener sensor_data = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            try {
+                AppLogs.loge("Sensor Data: " + args[0].toString());
+                final JSONObject jsonObject = new JSONObject(args[0].toString());
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            float temp = jsonObject.getInt("temp");
+                            addTemperatureEntry(temp);
+                            float hum = jsonObject.getInt("humd");
+                            addHumidityEntry(hum);
+
+                        } catch (Exception ex) {
+                            AppLogs.loge("Error : " + ex.getMessage());
+                        }
+                    }
+                });
+
+
+            } catch (Exception ex) {
+                AppLogs.loge("Error sending data:" + ex.getMessage());
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,7 +88,7 @@ public class PatientDetailActivity extends AppCompatActivity implements OnChartV
         humidityChart = (LineChart) findViewById(R.id.lineChart2PatientDetailActivity);
         patientDetails = (TextView) findViewById(R.id.patientDetails);
         setTitle("Patient Details");
-        socket = ((AppController) getApplication()).getSocket();
+        socket = AppController.getSocket();
         socket.connect();
         try {
             patient = getIntent().getExtras().getParcelable(Util.PATIENT_OBJECT);
@@ -70,13 +104,18 @@ public class PatientDetailActivity extends AppCompatActivity implements OnChartV
         }
         setUserData();
         setGraphData();
-        findViewById(R.id.patient_backButton).setOnClickListener(new View.OnClickListener() {
+        ((AppCompatButton) findViewById(R.id.patient_set_device_Button)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                finish();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        setDeviceDialog();
+                    }
+                });
             }
         });
-        findViewById(R.id.patient_discharge_button).setOnClickListener(new View.OnClickListener() {
+        ((AppCompatButton) findViewById(R.id.patient_discharge_button)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 try {
@@ -91,7 +130,93 @@ public class PatientDetailActivity extends AppCompatActivity implements OnChartV
                 }
             }
         });
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        socket.emit(Constants.DEVICE_STATE, "true", new Ack() {
+            @Override
+            public void call(Object... args) {
+                AppLogs.loge("Device state emitted");
+            }
+        });
+
+        socket.on(Constants.SENSOR_DATA, sensor_data);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        socket.off(Constants.SENSOR_DATA, sensor_data);
+        socket.emit(Constants.DEVICE_STATE, "false", new Ack() {
+            @Override
+            public void call(Object... args) {
+                AppLogs.loge("Device state emitted");
+
+            }
+        });
+    }
+
+    private void setDeviceDialog() {
+        socket.emit(Constants.GET_ALL_DEVICES);
+        final Emitter.Listener emitter = new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                try {
+                    AppLogs.logd(args[0].toString());
+                    JSONArray array = new JSONArray(args[0].toString());
+                    //   JSONArray array = jsonObject.getJSONArray();
+                    final ArrayAdapter<String> adapter = new ArrayAdapter<String>(PatientDetailActivity.this, R.layout.support_simple_spinner_dropdown_item);
+                    for (int i = 0; i < array.length(); i++) {
+                        String id = array.getString(i);
+                        adapter.add(id);
+                        AppLogs.loge("ID Added: " + id);
+                    }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            final AlertDialog.Builder dialog = new AlertDialog.Builder(PatientDetailActivity.this);
+                            dialog.setSingleChoiceItems(adapter, 0, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(final DialogInterface dialogInterface, int i) {
+                                    try {
+                                        AppLogs.logd("String Selected:" + adapter.getItem(i));
+                                        JSONObject object = new JSONObject();
+                                        object.put("p_id", patient.getId());
+                                        object.put("device_id", adapter.getItem(i));
+                                        socket.emit(Constants.SET_PATIENT_DEVICE, object, new Ack() {
+                                            @Override
+                                            public void call(Object... args) {
+                                                dialogInterface.dismiss();
+                                            }
+                                        });
+                                    } catch (Exception ex) {
+                                        AppLogs.loge("Error : " + ex.getMessage());
+                                    }
+                                }
+                            });
+                            String title = adapter.getCount() > 0 ? "Set Device For this Patient" : "No Devices Available";
+                            dialog.setTitle(title);
+                            dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    AppLogs.loge("Cancelled Device Selection");
+                                }
+                            });
+                            dialog.create().show();
+                        }
+                    });
+                    socket.off(Constants.GET_ALL_DEVICES, this);
+                } catch (Exception ec) {
+                    AppLogs.loge("Error Parsing : " + args[0].toString());
+                    socket.off(Constants.GET_ALL_DEVICES, this);
+                    ec.printStackTrace();
+                }
+            }
+        };
+//        emitter.call("{list:[]}");
+        socket.on(Constants.GET_ALL_DEVICES, emitter);
 
     }
 
@@ -219,11 +344,11 @@ public class PatientDetailActivity extends AppCompatActivity implements OnChartV
         runnable = new Runnable() {
             @Override
             public void run() {
-                AppLogs.logd("Loop running for x value: ");
-                // for (ILineDataSet d : dataSets) {
-                addTemperatureEntry((float) ((Math.random() * 45) + 3));
-                addHumidityEntry((float) ((Math.random() * 100) + 3));
-                handler.postDelayed(this, 1000);
+                //////////////////////
+                /////////Dummy Data
+//                addTemperatureEntry((float) ((Math.random() * 45) + 3));
+//                addHumidityEntry((float) ((Math.random() * 100) + 3));
+//                handler.postDelayed(this, 1000);
             }
         };
         handler.postDelayed(runnable, 1000);

@@ -33,9 +33,16 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         super.onCreate(savedInstanceState);
         AppLogs.logd("Get Socket");
         AppController app = (AppController) this.getApplication();
-        socket = app.getSocket();
+        socket = AppController.getSocket();
         setContentView(R.layout.activity_login);
         (findViewById(R.id.btn_login)).setOnClickListener(this);
+        findViewById(R.id.app_Logo).setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                startActivity(new Intent(LoginActivity.this, SettingActivity.class));
+                return true;
+            }
+        });
         email = (TextInputEditText) findViewById(R.id.login_input_email);
         pass = (TextInputEditText) findViewById(R.id.login_input_password);
 
@@ -99,18 +106,23 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             }
           */
             AppUser appUser = new AppUser();
+            ArrayList<String> pIds = new ArrayList<>();
+
             appUser.setUserName(jsonObject.getString("name"));
             appUser.setEmail(jsonObject.getString("email"));
             appUser.setUserID(jsonObject.getString("_id"));
-            JSONArray patients = jsonObject.getJSONArray("patients");
-            ArrayList<String> pIds = new ArrayList<>();
-            for (int i = 0; i < patients.length(); i++) {
-                pIds.add(patients.getString(i));
+            if (jsonObject.has("patients")) {
+                JSONArray patients = jsonObject.getJSONArray("patients");
+                for (int i = 0; i < patients.length(); i++) {
+                    pIds.add(patients.getString(i));
+                }
             }
-            JSONArray specialization = jsonObject.getJSONArray("patients");
             ArrayList<String> specs = new ArrayList<>();
-            for (int i = 0; i < specialization.length(); i++) {
-                specs.add(specialization.getString(i));
+            if (jsonObject.has("specialization")) {
+                JSONArray specialization = jsonObject.getJSONArray("specialization");
+                for (int i = 0; i < specialization.length(); i++) {
+                    specs.add(specialization.getString(i));
+                }
             }
             appUser.setPatientIds(pIds);
             appUser.setSpecialization(specs);

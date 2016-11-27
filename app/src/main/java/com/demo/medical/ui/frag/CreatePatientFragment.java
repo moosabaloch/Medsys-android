@@ -38,7 +38,7 @@ public class CreatePatientFragment extends Fragment implements Emitter.Listener 
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        socket = ((AppController) getActivity().getApplication()).getSocket();
+        socket = AppController.getSocket();
         View view = inflater.inflate(R.layout.fragment_create_patient, container, false);
         name = (TextInputEditText) view.findViewById(R.id.patient_name_et);
         desease = (TextInputEditText) view.findViewById(R.id.patient_disease_et);

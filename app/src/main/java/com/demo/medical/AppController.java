@@ -14,7 +14,7 @@ import io.socket.client.Socket;
  */
 
 public class AppController extends Application {
-    private Socket mSocket;
+    private static Socket mSocket;
 
 
     @Override
@@ -29,7 +29,7 @@ public class AppController extends Application {
     }
 
 
-    public Socket getSocket() {
+    public static Socket getSocket() {
         return mSocket;
     }
 
